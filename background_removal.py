@@ -2,12 +2,11 @@ import cv2
 import numpy as np
 
 # Read the video
-vid = cv2.VideoCapture("dnt_ball_tracker/football/rolling_ball.avi")
-
+vid = cv2.VideoCapture("football/rolling_ball.avi")
 while(vid.isOpened()):
     _, f = vid.read()
-    if f == None: break
 
+    if f == None: break
     hsv = cv2.cvtColor(f,cv2.COLOR_BGR2HSV)
     green = cv2.inRange(hsv,np.array((53,100, 100)),np.array((90,255,255)))
     s = green[:,1:]
@@ -20,8 +19,18 @@ while(vid.isOpened()):
     cv2.drawContours(edges, contours, -1, (255,0,0), 3)
 
     params = cv2.SimpleBlobDetector_Params()
+
+    # Filter by Circularity
     params.filterByCircularity = True
     params.minCircularity = 0.5
+
+    # Filter by Convexity
+    params.filterByConvexity = True
+    params.minConvexity = 0.75
+
+    # Filter by Area.
+    params.filterByArea = True
+    params.minArea = 100
 
     detector = cv2.SimpleBlobDetector(params)
 
