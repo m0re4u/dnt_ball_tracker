@@ -22,7 +22,6 @@ while(vid.isOpened()):
 
     contours,hierarchy = cv2.findContours(edges,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(edges, contours, -1, (255,0,0), 3)
-
     params = cv2.SimpleBlobDetector_Params()
 
     # Filter by Circularity
@@ -42,8 +41,8 @@ while(vid.isOpened()):
     # Detect blobs.
     keypoints = detector.detect(edges)
     if len(keypoints) > 0:
-        print keypoints[0].pt[0]
-        print keypoints[0].pt[1]
+        # print keypoints[0].pt[0]
+        # print keypoints[0].pt[1]
         print keypoints[0].size
 
         sizeBall = keypoints[0].size
@@ -54,10 +53,9 @@ while(vid.isOpened()):
     # Draw detected blobs as blue circles.
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
     im_with_keypoints = cv2.drawKeypoints(f, keypoints, np.array([]), (255,0,0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
-
     cv2.imshow('detect ball',im_with_keypoints)
-    # cv2.imshow('edges',edges)
+    cv2.waitKey(3)
+
 
     if cv2.waitKey(100) & 0xFF == ord('q'):
     	break
