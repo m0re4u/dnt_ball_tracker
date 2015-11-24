@@ -95,15 +95,20 @@ class balldetector():
         circles = np.uint16(np.around(circles))
         for i in circles[0,:]:
             # cv::Mat roi = img(cv::Range(circle[1]-circle[2], circle[1]+circle[2]+1), cv::Range(circle[0]-circle[2], circle[0]+circle[2]+1))
+            # 4 Points of Region of interest square
             x_min = i[0] - i[2]
             x_max = i[0] + i[2]
             y_min = i[1] - i[2]
             y_max = i[1] + i[2]
             roi = cv_image[x_min:x_max, y_min:y_max]
             print roi
+
+            # Working on creating a mask on the coloured image
             rows, columns = roi.shape[:2]
             mask = [rows, columns]
             print mask
+
+
             # draw the outer circle
             cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
             # draw the center of the circle
