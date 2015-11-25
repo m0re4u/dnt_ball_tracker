@@ -7,6 +7,7 @@ import tf
 import numpy as np
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
+from geometry_msgs.msg import Point
 from cv_bridge import CvBridge, CvBridgeError
 
 class balldetector():
@@ -15,6 +16,7 @@ class balldetector():
         self.pixToMeters = 19.975
         self.br = tf.TransformBroadcaster()
         self.image_sub = rospy.Subscriber("/nao_camera/image_raw",Image,self.callback)
+        self.point_pub = rospy.Publisher("/ball_detection/point", Point, queue_size=1 )
         rospy.loginfo("Initialised balldetector")
 
     def callback(self,data):
@@ -92,31 +94,78 @@ class balldetector():
         circles = cv2.HoughCircles(cimg,cv.CV_HOUGH_GRADIENT,1,30,
                                     param1=30,param2=25,minRadius=20,maxRadius=60)
 
-        circles = np.uint16(np.around(circles))
-        for i in circles[0,:]:
-            # cv::Mat roi = img(cv::Range(circle[1]-circle[2], circle[1]+circle[2]+1), cv::Range(circle[0]-circle[2], circle[0]+circle[2]+1))
-            # 4 Points of Region of interest square
-            x_min = i[0] - i[2]
-            x_max = i[0] + i[2]
-            y_min = i[1] - i[2]
-            y_max = i[1] + i[2]
-            roi = cv_image[x_min:x_max, y_min:y_max]
-            print roi
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
 
-            # Working on creating a mask on the coloured image
-            rows, columns = roi.shape[:2]
-            mask = [rows, columns]
-            print mask
+            #print("n circles: %d" % np.shape(circles)[2])
+
+            best_circle = 0
+            best_val = 0
+            best_roi = 0;
+            #sums = []
+
+            for i in circles[0,:]:
+                # cv::Mat roi = img(cv::Range(circle[1]-circle[2], circle[1]+circle[2]+1), cv::Range(circle[0]-circle[2], circle[0]+circle[2]+1))
+                # 4 Points of Region of interest square
+                x_min = i[0] - i[2]
+                x_max = i[0] + i[2]
+                y_min = i[1] - i[2]
+                y_max = i[1] + i[2]
+
+                # For now just take the square
+                roi = cv_image[y_min:y_max, x_min:x_max]
+
+                # Calculate average
+                roi_sum = np.sum(np.sum(roi, axis=0), axis=0) / (np.shape(roi)[0]*np.shape(roi)[1])
+                #print roi_sum
+
+                # The ball has the most blue compared to other ROI's
+                # Not really robust, probably gets confused when a nao is in the image
+                # Works for now
+                if roi_sum[2] > best_val:
+                    best_val = roi_sum[2]
+                    best_circle = i
+                    best_roi = roi
+
+                #sums.append(roi_sum)
 
 
-            # draw the outer circle
-            cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
-            # draw the center of the circle
-            cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
-            # break
-        cv2.imshow('detected circles',cimg)
-        cv2.imshow("edges", edges)
-        cv2.waitKey(3)
+                #cv2.imshow( "ROI", roi )
+                #cv2.waitKey(0)
+
+
+            '''
+            # For debugging so put in a different loop, should be removed anyway
+            for i in circles[0,:]:
+                # draw the outer circle
+                cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+                # draw the center of the circle
+                cv2.circle(cimg,(i[0],i[1]),2,(0,255,0),3)
+                # break
+
+            # Draw winning circle
+            cv2.circle(cimg,(best_circle[0],best_circle[1]),best_circle[2],(255,255,255),2)
+            cv2.circle(cimg,(best_circle[0],best_circle[1]),2,(255,255,255),3)
+
+            cv2.imshow('detected circles',cimg)
+            cv2.imshow("edges", edges)
+            cv2.imshow("best_roi", best_roi )
+            cv2.waitKey(3)
+            '''
+
+            # publish point
+            point = Point()
+            point.x = best_circle[0]
+            point.y = best_circle[1]
+            point.z = best_circle[2]
+
+            self.point_pub.publish( point )
+
+
+
+
+
+
 
     # Draw detected blobs as blue circles.
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
