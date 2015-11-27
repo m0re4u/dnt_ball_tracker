@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ball_detector)
+project(ball_detector_package)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf
+  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -87,11 +88,20 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+generate_dynamic_reconfigure_options(
+  cfg/Tutorials.cfg
+)
+# Macro for adding python targets as executable
+macro(add_python_target tgt)
+  foreach(file ${ARGN})
+    set(OUT ${CMAKE_CURRENT_BINARY_DIR}/${file}.pyc)
+    list(APPEND OUT_FILES ${OUT})
+    add_custom_command(OUTPUT ${OUT} COMMAND python -m py_compile)
+  endforeach()
 
+  add_custom_target(${tgt} ALL
+    DEPENDS ${OUT_FILES})
+endmacro()
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -103,8 +113,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ball_detector
-#  CATKIN_DEPENDS cv_bridge opencv2 rospy sensor_msgs std_msgs tf
+#  LIBRARIES ball_detector_package
+CATKIN_DEPENDS cv_bridge opencv2 rospy sensor_msgs std_msgs tf
 #  DEPENDS system_lib
 )
 
@@ -120,24 +130,25 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(ball_detector
-#   src/${PROJECT_NAME}/ball_detector.cpp
+# add_library(ball_detector_package
+#   src/${PROJECT_NAME}/ball_detector_package.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(ball_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(ball_detector_package ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(ball_detector_node src/ball_detector_node.cpp)
+# add_executable(ball_detector_package_node src/ball_detector_package_node.cpp)
+add_python_target(ball_detector_node src/ball_detector.py)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(ball_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(ball_detector_package_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(ball_detector_node
+# target_link_libraries(ball_detector_package_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -156,7 +167,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS ball_detector ball_detector_node
+# install(TARGETS ball_detector_package ball_detector_package_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -181,7 +192,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_ball_detector.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_ball_detector_package.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
