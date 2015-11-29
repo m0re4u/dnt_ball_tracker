@@ -5,11 +5,10 @@ import numpy as np
 # Read the video
 vid = cv2.VideoCapture("football/rolling_ball.avi")
 fourcc = cv2.cv.CV_FOURCC(*'XVID')
-out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
+out = cv2.VideoWriter('output.avi',fourcc, 10.0, (320,240))
 while(vid.isOpened()):
     _, f = vid.read()
     if f == None: break
-
     # Hough dinges
     # height, width = f.shape[:2]
     # f = cv2.resize(f,(width/2, height/2))
